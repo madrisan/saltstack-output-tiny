@@ -4,4 +4,12 @@
 
 # SaltStack output module "tiny"
 
-Display results of state runs the most succint way.
+A Salt _outputter_ module is a Python module placed in a directory called `_output/` at the root of the Salt fileserver, usually `/srv/salt`. Outputter modules display affect how that data is shown to the user.
+
+The _tiny_ outputter displays the results of state runs the most succint way, and can be selected by using the command-line option _--out_:
+
+```bash
+   salt-ssh <minion-id> state.apply <state> --out tiny
+```
+
+
