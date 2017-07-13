@@ -67,19 +67,18 @@ class TinyDisplay(object):
             ret = data[block_key]
 
             changes = ret['changes']
-            status = ret['result']  # FIXME: status can be None
+            status = ret['result']
 
-            if changes:
-                color = self.colors['CYAN']
-                status_msg = 'ok (changed)'
-            elif status:
+            if status is True:
                 color = self.colors['GREEN']
                 status_msg = 'ok'
+                if changes:
+                    color = self.colors['CYAN']
+                    status_msg += ' (changed)'
             else:
-                color = self.colors['RED']
-                status_msg = 'ko'
-
-            if status is False:
+                # status is None when __opts__['test'] has been set by user
+                color = self.colors['LIGHT_YELLOW' if status is None else 'RED']
+                status_msg = 'failed'
                 issues += 1
 
             comps = [sdecode(comp) for comp in block_key.split('_|-')]
