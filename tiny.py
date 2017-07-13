@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 '''
-Display a succint output
-========================
+Outputter for displaying results of state runs the most succint way
+===================================================================
 
-Display results of state runs the most succint way.
+The tiny outputter has been developed to make the output from shell
+commands on minions appear very short but with all the informations
+on configuration changes and failures.
 '''
 
 # Import python libs
