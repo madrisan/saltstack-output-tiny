@@ -70,7 +70,7 @@ class TinyDisplay(object):
             status = ret['result']  # FIXME: status can be None
 
             if changes:
-                color = self.colors['LIGHT_YELLOW']
+                color = self.colors['CYAN']
                 status_msg = 'ok (changed)'
             elif status:
                 color = self.colors['GREEN']
