@@ -30,7 +30,7 @@ def __virtual__():
 
 class TinyDisplay(object):
     '''
-    Create generator for tiyn output
+    Create generator for tiny output
     '''
     def __init__(self):
         self.colors = salt.utils.get_colors(
