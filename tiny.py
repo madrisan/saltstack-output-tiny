@@ -83,11 +83,11 @@ class TinyDisplay(object):
 
             comps = [sdecode(comp) for comp in block_key.split('_|-')]
 
-            tiny_data += '{0}{1}- ({2}) {3} ... {4}{5[ENDC]}\n'.format(
-                         color,
+            tiny_data += '{0}- ({1}) {2} ... {3}{4}{5[ENDC]}\n'.format(
                          ' ' * self.indent,
                          comps[0],
                          comps[2],
+                         color,
                          status_msg,
                          self.colors)
 
