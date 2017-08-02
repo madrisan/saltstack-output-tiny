@@ -39,64 +39,87 @@ class TinyDisplay(object):
         self.indent = 2
 
     def display(self, minion_id, data):
-        # Example of data:
-        # {
-        #   "frghcslsgwv01": {
-        #     "file_|-/etc/salt/roster_|-/etc/salt/roster_|-managed": {
-        #       "comment": "File /etc/salt/roster is in the correct state",
-        #       "pchanges": {},
-        #       "name": "/etc/salt/roster",
-        #       "start_time": "14:49:50.431497",
-        #       "result": true,
-        #       "duration": 3.563,
-        #       "__run_num__": 4,
-        #       "changes": {},
-        #       "__id__": "/etc/salt/roster"
-        #     },
-        #     ...
-
         minion_id = sdecode(minion_id)
-
         color = self.colors['CYAN']   # Print the minion name in cyan
-        tiny_data = '{0}{1}{2[ENDC]}\n'.format(color, minion_id, self.colors)
+        tiny_data = '{0}{1}{2[ENDC]}:\n'.format(color, minion_id, self.colors)
 
-        issues = 0
-        for block_key in sorted(
-                data,
-                key=lambda k: data[k].get('__run_num__', 0)):
-            ret = data[block_key]
-
-            changes = ret['changes']
-            status = ret['result']
-
-            if status is True:
-                color = self.colors['GREEN']
-                status_msg = 'ok'
-                if changes:
-                    color = self.colors['CYAN']
-                    status_msg += ' (changed)'
-            else:
-                # status is None when __opts__['test'] has been set by user
-                color = self.colors['LIGHT_YELLOW' if status is None else 'RED']
-                status_msg = 'failed'
-                issues += 1
-
-            comps = [sdecode(comp) for comp in block_key.split('_|-')]
-
-            tiny_data += '{0}- ({1}) {2} ... {3}{4}{5[ENDC]}\n'.format(
+        if isinstance(data, int):
+            tiny_data += '{0}{1}'.format(' ' * self.indent, data)
+        if isinstance(data, str):
+            tiny_data += '{0}{1}'.format(
                          ' ' * self.indent,
-                         comps[0],
-                         comps[2],
-                         color,
-                         status_msg,
-                         self.colors)
+                         data.replace('\n', '\n{0}'.format(' ' * self.indent)))
+        if isinstance(data, list):
+            for item in data:
+                tiny_data += '{0}{1}'.format(' ' * self.indent, item)
+        if isinstance(data, dict):
+            # Verify that the needed data is present.
+            # Example of valid data:
+            # {
+            #   "frghcslsgwv01": {
+            #     "file_|-/etc/salt/roster_|-/etc/salt/roster_|-managed": {
+            #       "comment": "File /etc/salt/roster is in the correct state",
+            #       "pchanges": {},
+            #       "name": "/etc/salt/roster",
+            #       "start_time": "14:49:50.431497",
+            #       "result": true,
+            #       "duration": 3.563,
+            #       "__run_num__": 4,
+            #       "changes": {},
+            #       "__id__": "/etc/salt/roster"
+            #     },
+            #     ...
+            data_tmp = {}
+            for tname, info in six.iteritems(data):
+                if isinstance(info, dict) and tname is not 'changes' \
+                                      and info and '__run_num__' not in info:
+                    # FIXME
+                    log.error(
+                        'The State execution failed to record the order '
+                        'in which all states were executed.'
+                    )
+                if isinstance(info, dict) and 'result' in info:
+                    data_tmp[tname] = info
+            data = data_tmp
 
-        summary = '{0} '.format(minion_id)
-        summary += 'has {0} issue(s)'.format(issues) if issues else \
-                   'is in the required state'
+            issues = 0
+            for block_key in sorted(
+                    data,
+                    key=lambda k: data[k].get('__run_num__', 0)):
+                ret = data[block_key]
 
-        color = self.colors['RED' if issues else 'GREEN']
-        tiny_data += '\t{0}-- {1}{2[ENDC]}'.format(color, summary, self.colors)
+                changes = ret['changes']
+                status = ret['result']
+
+                if status is True:
+                    color = self.colors['GREEN']
+                    status_msg = 'ok'
+                    if changes:
+                        color = self.colors['CYAN']
+                        status_msg += ' (changed)'
+                else:
+                    # status is None when __opts__['test'] has been set by user
+                    color = self.colors['LIGHT_YELLOW' \
+                                if status is None else 'RED']
+                    status_msg = 'failed'
+                    issues += 1
+
+                comps = [sdecode(comp) for comp in block_key.split('_|-')]
+
+                tiny_data += '{0}- ({1}) {2} ... {3}{4}{5[ENDC]}\n'.format(
+                             ' ' * self.indent,
+                             comps[0],
+                             comps[2],
+                             color,
+                             status_msg,
+                             self.colors)
+
+            summary = '{0} '.format(minion_id)
+            summary += 'has {0} issue(s)'.format(issues) if issues else \
+                       'is in the required state'
+            color = self.colors['RED' if issues else 'GREEN']
+            tiny_data += '\t{0}-- {1}{2[ENDC]}'.format(color, summary, self.colors)
+
         return tiny_data
 
 def output(data, **kwargs):  # pylint: disable=unused-argument
