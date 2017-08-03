@@ -12,6 +12,7 @@ on configuration changes and failures.
 from __future__ import absolute_import
 from __future__ import print_function
 import logging
+import pprint
 
 # Import salt libs
 import salt.utils
@@ -38,20 +39,22 @@ class TinyDisplay(object):
                 __opts__.get('color_theme'))
         self.indent = 2
 
+    def _indent(self, text):
+        padding = ' ' * self.indent
+        return u''.join(padding + line for line in text.splitlines(True))
+
     def display(self, minion_id, data):
+        tinyout = []
         minion_id = sdecode(minion_id)
         color = self.colors['CYAN']   # Print the minion name in cyan
-        tiny_data = '{0}{1}{2[ENDC]}:\n'.format(color, minion_id, self.colors)
+        tinyout.append((u'{0}{1}{2[ENDC]}:'
+                        .format(color, minion_id, self.colors)))
 
-        if isinstance(data, int):
-            tiny_data += '{0}{1}'.format(' ' * self.indent, data)
-        if isinstance(data, str):
-            tiny_data += '{0}{1}'.format(
-                         ' ' * self.indent,
-                         data.replace('\n', '\n{0}'.format(' ' * self.indent)))
+        if isinstance(data, int) or isinstance(data, str):
+            tinyout.append(self._indent(str(data)))
         if isinstance(data, list):
             for item in data:
-                tiny_data += '{0}{1}'.format(' ' * self.indent, item)
+                tinyout.append(self._indent(item))
         if isinstance(data, dict):
             # Verify that the needed data is present.
             # Example of valid data:
@@ -73,11 +76,11 @@ class TinyDisplay(object):
             for tname, info in six.iteritems(data):
                 if isinstance(info, dict) and tname is not 'changes' \
                                       and info and '__run_num__' not in info:
-                    # FIXME
-                    log.error(
-                        'The State execution failed to record the order '
-                        'in which all states were executed.'
-                    )
+                    err = (u'The State execution failed to record the order '
+                           'in which all states were executed. The state '
+                           'return missing data is:')
+                    tinyout.insert(0, pprint.pformat(info))
+                    tinyout.insert(0, err)
                 if isinstance(info, dict) and 'result' in info:
                     data_tmp[tname] = info
             data = data_tmp
@@ -106,21 +109,24 @@ class TinyDisplay(object):
 
                 comps = [sdecode(comp) for comp in block_key.split('_|-')]
 
-                tiny_data += '{0}- ({1}) {2} ... {3}{4}{5[ENDC]}\n'.format(
-                             ' ' * self.indent,
-                             comps[0],
-                             comps[2],
-                             color,
-                             status_msg,
-                             self.colors)
+                tinyout.append(
+                    u'{0}- ({1}) {2} ... {3}{4}{5[ENDC]}'.format(
+                        ' ' * self.indent,
+                        comps[0],
+                        comps[2],
+                        color,
+                        status_msg,
+                        self.colors))
 
-            summary = '{0} '.format(minion_id)
-            summary += 'has {0} issue(s)'.format(issues) if issues else \
-                       'is in the required state'
+            summary = u'{0} '.format(minion_id)
+            summary += u'has {0} issue(s)'.format(issues) if issues else \
+                       u'is in the required state'
+
             color = self.colors['RED' if issues else 'GREEN']
-            tiny_data += '\t{0}-- {1}{2[ENDC]}'.format(color, summary, self.colors)
+            tinyout.append((u'\t{0}-- {1}{2[ENDC]}'
+                            .format(color, summary, self.colors)))
 
-        return tiny_data
+        return u'\n'.join(tinyout)
 
 def output(data, **kwargs):  # pylint: disable=unused-argument
     '''
