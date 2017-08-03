@@ -71,7 +71,6 @@ class TinyDisplay(object):
             #       "changes": {},
             #       "__id__": "/etc/salt/roster"
             #     },
-            #     ...
             data_tmp = {}
             for tname, info in six.iteritems(data):
                 if isinstance(info, dict) and tname is not 'changes' \
@@ -108,12 +107,15 @@ class TinyDisplay(object):
                     issues += 1
 
                 comps = [sdecode(comp) for comp in block_key.split('_|-')]
-
+                task_type = comps[0]
+                task_description = comps[2].splitlines()
+                if len(task_description) > 1:
+                   task_description = [u'{0} [...]'.format(task_description[0])]
                 tinyout.append(
-                    u'{0}- ({1}) {2} ... {3}{4}{5[ENDC]}'.format(
+                    u'{0}- ({1}) {2} ...{3}{4}{5[ENDC]}'.format(
                         ' ' * self.indent,
-                        comps[0],
-                        comps[2],
+                        task_type,
+                        task_description[0],
                         color,
                         status_msg,
                         self.colors))
