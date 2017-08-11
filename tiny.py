@@ -92,6 +92,7 @@ class TinyDisplay(object):
 
                 changes = ret['changes']
                 status = ret['result']
+                diff_msg = ''
 
                 if status is True:
                     color = self.colors['GREEN']
@@ -104,6 +105,10 @@ class TinyDisplay(object):
                     color = self.colors['LIGHT_YELLOW' \
                                 if status is None else 'RED']
                     status_msg = 'failed'
+                    if 'comment' in ret:
+                        status_msg += '\n{0}'.format(ret['comment'])
+                    if 'diff' in changes:
+                        diff_msg += changes['diff'].rstrip()
                     issues += 1
 
                 comps = [sdecode(comp) for comp in block_key.split('_|-')]
@@ -118,6 +123,11 @@ class TinyDisplay(object):
                         task_description[0],
                         color,
                         status_msg,
+                        self.colors))
+                if diff_msg:
+                    tinyout.append(u'{0}{1}{2[ENDC]}'.format(
+                        color,
+                        diff_msg,
                         self.colors))
 
             summary = u'{0} '.format(minion_id)
