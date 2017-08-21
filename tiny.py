@@ -107,15 +107,16 @@ class TinyDisplay(object):
                     status_msg = 'failed'
                     if 'comment' in ret:
                         status_msg += '\n{0}'.format(ret['comment'])
-                    if 'diff' in changes:
-                        diff_msg += changes['diff'].rstrip()
                     issues += 1
+
+                if changes and 'diff' in changes:
+                    diff_msg += changes['diff'].rstrip()
 
                 comps = [sdecode(comp) for comp in block_key.split('_|-')]
                 task_type = comps[0]
                 task_description = comps[2].splitlines()
                 if len(task_description) > 1:
-                   task_description = [u'{0} [...]'.format(task_description[0])]
+                    task_description = [u'{0} [...]'.format(task_description[0])]
                 tinyout.append(
                     u'{0}- ({1}) {2} ...{3}{4}{5[ENDC]}'.format(
                         ' ' * self.indent,
@@ -125,10 +126,13 @@ class TinyDisplay(object):
                         status_msg,
                         self.colors))
                 if diff_msg:
-                    tinyout.append(u'{0}{1}{2[ENDC]}'.format(
-                        color,
-                        diff_msg,
-                        self.colors))
+                    tinyout.append(u'{0}diff:{1[ENDC]}'
+                        .format(color, self.colors))
+                    for line in diff_msg.splitlines():
+                        tinyout.append(u'{0}{1}{2[ENDC]}'.format(
+                            color,
+                            '{0}{1}'.format(' ' * self.indent, line),
+                            self.colors))
 
             summary = u'{0} '.format(minion_id)
             summary += u'has {0} issue(s)'.format(issues) if issues else \
