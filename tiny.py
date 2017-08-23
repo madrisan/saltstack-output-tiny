@@ -127,10 +127,10 @@ class TinyDisplay(object):
                         self.colors))
                 if diff_msg:
                     tinyout.append(u'{0}diff:{1[ENDC]}'
-                        .format(color, self.colors))
+                        .format(self.colors['CYAN'], self.colors))
                     for line in diff_msg.splitlines():
                         tinyout.append(u'{0}{1}{2[ENDC]}'.format(
-                            color,
+                            self.colors['GREEN'],
                             '{0}{1}'.format(' ' * self.indent, line),
                             self.colors))
 
